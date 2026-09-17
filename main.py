@@ -1,10 +1,8 @@
-import java.util.ArrayList; 
+import java.util.ArrayList;
 import java.util.Scanner;
-
 
 // Parent class
 class Person {
-
     private int personCode;
     private String personName;
     private String phoneNumber;
@@ -28,7 +26,7 @@ class Person {
     }
 }
 
-// Passenger class
+// Rider class
 class Rider extends Person {
 
     Rider(int personCode, String personName, String phoneNumber) {
@@ -38,7 +36,6 @@ class Rider extends Person {
 
 // Driver class
 class CabDriver extends Person {
-
     private double cabDistance;
     private boolean freeCab;
 
@@ -48,7 +45,7 @@ class CabDriver extends Person {
         super(personCode, personName, phoneNumber);
 
         this.cabDistance = cabDistance;
-        freeCab = true;
+        this.freeCab = true;
     }
 
     public double getCabDistance() {
@@ -64,9 +61,8 @@ class CabDriver extends Person {
     }
 }
 
-// Ride class
+// Trip class
 class Trip {
-
     private int tripNumber;
     private Rider rider;
     private CabDriver cabDriver;
@@ -82,19 +78,25 @@ class Trip {
         this.cabDriver = cabDriver;
         this.tripDistance = tripDistance;
 
-        tripFare = 50 + (tripDistance * 15);
+        // Base fare = Rs. 50
+        // Per km charge = Rs. 15
+        this.tripFare = 50 + (tripDistance * 15);
 
-        tripStatus = "BOOKED";
+        this.tripStatus = "BOOKED";
     }
 
     public void finishTrip() {
-        tripStatus = "COMPLETED";
-        cabDriver.changeCabStatus(true);
+        if (tripStatus.equals("BOOKED")) {
+            tripStatus = "COMPLETED";
+            cabDriver.changeCabStatus(true);
+        }
     }
 
     public void stopTrip() {
-        tripStatus = "CANCELLED";
-        cabDriver.changeCabStatus(true);
+        if (tripStatus.equals("BOOKED")) {
+            tripStatus = "CANCELLED";
+            cabDriver.changeCabStatus(true);
+        }
     }
 
     public int getTripNumber() {
@@ -106,13 +108,12 @@ class Trip {
     }
 
     public void showTrip() {
-
         System.out.println("------------------------------");
         System.out.println("Trip Number : " + tripNumber);
         System.out.println("Rider       : " + rider.getPersonName());
         System.out.println("Driver      : " + cabDriver.getPersonName());
         System.out.println("Distance    : " + tripDistance + " km");
-        System.out.println("Fare        : Rs. " + tripFare);
+        System.out.printf("Fare        : Rs. %.2f%n", tripFare);
         System.out.println("Status      : " + tripStatus);
         System.out.println("------------------------------");
     }
@@ -129,7 +130,7 @@ public class Main {
 
     static int nextTripNumber = 1001;
 
-    // Add a passenger
+    // Add a rider
     public static void addRider() {
 
         System.out.println("\n--- ADD RIDER ---");
@@ -138,14 +139,24 @@ public class Main {
         int code = inputBox.nextInt();
         inputBox.nextLine();
 
+        // Check duplicate rider code
+        if (findRider(code) != null) {
+            System.out.println("A rider with this code already exists.");
+            return;
+        }
+
         System.out.print("Enter rider name: ");
         String name = inputBox.nextLine();
 
         System.out.print("Enter phone number: ");
         String phone = inputBox.nextLine();
 
-        Rider newRider = new Rider(code, name, phone);
+        if (name.trim().isEmpty()) {
+            System.out.println("Rider name cannot be empty.");
+            return;
+        }
 
+        Rider newRider = new Rider(code, name, phone);
         riderList.add(newRider);
 
         System.out.println("Rider added successfully.");
@@ -166,8 +177,13 @@ public class Main {
         System.out.print("Enter phone number: ");
         String phone = inputBox.nextLine();
 
-        System.out.print("Enter distance from passenger: ");
+        System.out.print("Enter distance from passenger (km): ");
         double distance = inputBox.nextDouble();
+
+        if (distance < 0) {
+            System.out.println("Distance cannot be negative.");
+            return;
+        }
 
         CabDriver newDriver =
                 new CabDriver(code, name, phone, distance);
@@ -182,7 +198,7 @@ public class Main {
 
         System.out.println("\n--- CAB DRIVERS ---");
 
-        if (cabList.size() == 0) {
+        if (cabList.isEmpty()) {
             System.out.println("No drivers available.");
             return;
         }
@@ -192,8 +208,7 @@ public class Main {
             System.out.println(
                     "Code: " + cab.getPersonCode()
                     + " | Name: " + cab.getPersonName()
-                    + " | Distance: " + cab.getCabDistance()
-                    + " km"
+                    + " | Distance: " + cab.getCabDistance() + " km"
                     + " | Status: "
                     + (cab.isFreeCab() ? "Available" : "Busy")
             );
@@ -223,10 +238,9 @@ public class Main {
             if (cab.isFreeCab()) {
 
                 if (chosenCab == null) {
-
                     chosenCab = cab;
-
-                } else if (cab.getCabDistance()
+                }
+                else if (cab.getCabDistance()
                         < chosenCab.getCabDistance()) {
 
                     chosenCab = cab;
@@ -242,12 +256,12 @@ public class Main {
 
         System.out.println("\n--- BOOK A CAB ---");
 
-        if (riderList.size() == 0) {
+        if (riderList.isEmpty()) {
             System.out.println("Please add a rider first.");
             return;
         }
 
-        if (cabList.size() == 0) {
+        if (cabList.isEmpty()) {
             System.out.println("No cabs have been added.");
             return;
         }
@@ -269,8 +283,13 @@ public class Main {
             return;
         }
 
-        System.out.print("Enter journey distance: ");
+        System.out.print("Enter journey distance (km): ");
         double journeyDistance = inputBox.nextDouble();
+
+        if (journeyDistance <= 0) {
+            System.out.println("Journey distance must be greater than 0.");
+            return;
+        }
 
         double expectedFare =
                 50 + (journeyDistance * 15);
@@ -282,7 +301,8 @@ public class Main {
                 + chosenCab.getPersonName());
         System.out.println("Distance : "
                 + journeyDistance + " km");
-        System.out.println("Fare     : Rs. " + expectedFare);
+
+        System.out.printf("Fare     : Rs. %.2f%n", expectedFare);
 
         System.out.print("Confirm booking? (Y/N): ");
         char answer = inputBox.next().charAt(0);
@@ -300,6 +320,7 @@ public class Main {
 
             tripBox.add(newTrip);
 
+            // Mark cab as busy
             chosenCab.changeCabStatus(false);
 
             System.out.println("\nCab booked successfully.");
@@ -314,7 +335,20 @@ public class Main {
         }
     }
 
-    // Complete a ride
+    // Find trip
+    public static Trip findTrip(int wantedTrip) {
+
+        for (Trip trip : tripBox) {
+
+            if (trip.getTripNumber() == wantedTrip) {
+                return trip;
+            }
+        }
+
+        return null;
+    }
+
+    // Complete a trip
     public static void completeTrip() {
 
         System.out.println("\n--- COMPLETE TRIP ---");
@@ -322,34 +356,29 @@ public class Main {
         System.out.print("Enter trip number: ");
         int wantedTrip = inputBox.nextInt();
 
-        for (Trip trip : tripBox) {
+        Trip trip = findTrip(wantedTrip);
 
-            if (trip.getTripNumber() == wantedTrip) {
-
-                if (trip.getTripStatus().equals("BOOKED")) {
-
-                    trip.finishTrip();
-
-                    System.out.println(
-                            "Trip completed successfully."
-                    );
-
-                } else {
-
-                    System.out.println(
-                            "This trip is already "
-                            + trip.getTripStatus()
-                    );
-                }
-
-                return;
-            }
+        if (trip == null) {
+            System.out.println("Trip not found.");
+            return;
         }
 
-        System.out.println("Trip not found.");
+        if (trip.getTripStatus().equals("BOOKED")) {
+
+            trip.finishTrip();
+
+            System.out.println("Trip completed successfully.");
+
+        } else {
+
+            System.out.println(
+                    "This trip is already "
+                    + trip.getTripStatus()
+            );
+        }
     }
 
-    // Cancel a ride
+    // Cancel a trip
     public static void cancelTrip() {
 
         System.out.println("\n--- CANCEL TRIP ---");
@@ -357,30 +386,25 @@ public class Main {
         System.out.print("Enter trip number: ");
         int wantedTrip = inputBox.nextInt();
 
-        for (Trip trip : tripBox) {
+        Trip trip = findTrip(wantedTrip);
 
-            if (trip.getTripNumber() == wantedTrip) {
-
-                if (trip.getTripStatus().equals("BOOKED")) {
-
-                    trip.stopTrip();
-
-                    System.out.println(
-                            "Trip cancelled successfully."
-                    );
-
-                } else {
-
-                    System.out.println(
-                            "This trip cannot be cancelled."
-                    );
-                }
-
-                return;
-            }
+        if (trip == null) {
+            System.out.println("Trip not found.");
+            return;
         }
 
-        System.out.println("Trip not found.");
+        if (trip.getTripStatus().equals("BOOKED")) {
+
+            trip.stopTrip();
+
+            System.out.println("Trip cancelled successfully.");
+
+        } else {
+
+            System.out.println(
+                    "This trip cannot be cancelled."
+            );
+        }
     }
 
     // Display all trips
@@ -388,7 +412,7 @@ public class Main {
 
         System.out.println("\n--- TRIP HISTORY ---");
 
-        if (tripBox.size() == 0) {
+        if (tripBox.isEmpty()) {
             System.out.println("No trips have been booked.");
             return;
         }
@@ -456,6 +480,7 @@ public class Main {
                         System.out.println(
                                 "Thank you for using the app."
                         );
+
                         inputBox.close();
                         return;
 
@@ -468,7 +493,7 @@ public class Main {
             } catch (Exception problem) {
 
                 System.out.println(
-                        "Invalid input. Please try again."
+                        "Invalid input. Please enter a valid value."
                 );
 
                 inputBox.nextLine();
